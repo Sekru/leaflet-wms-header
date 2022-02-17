@@ -1,6 +1,6 @@
 'use strict';
 
-function fetchImage(url, callback, headers, abort) {
+function fetchImage(url, headers, abort) {
   let _headers = {};
   if (headers) {
     headers.forEach(h => {
@@ -14,14 +14,13 @@ function fetchImage(url, callback, headers, abort) {
       controller.abort();
     });
   }
-  fetch(url, {
+  return fetch(url, {
     method: "GET",
     headers: _headers,
     mode: "cors",
     signal: signal
   })
-  .then(f => f.blob)
-  .then(blob => callback(blob));
+  .then(f => f.blob());
 }
 
 L.TileLayer.WMSHeader = L.TileLayer.WMS.extend({
@@ -37,21 +36,20 @@ L.TileLayer.WMSHeader = L.TileLayer.WMS.extend({
 
     fetchImage(
       url,
-      resp => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          img.src = reader.result;
-        };
-        reader.readAsDataURL(resp);
-        done(null, img);
-      },
       this.headers,
       this.abort
-    );
+    ).then(blob => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(blob);
+      done(null, img);
+    });
     return img;
   }
 });
 
-L.TileLayer.wmsHeader = function (url, options, headers, abort) {
+L.tileLayer.wmsHeader = function (url, options, headers, abort) {
   return new L.TileLayer.WMSHeader(url, options, headers, abort);
 };
