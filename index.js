@@ -1,6 +1,6 @@
 'use strict';
 
-async function fetchImage(url, callback, headers, abort) {
+function fetchImage(url, callback, headers, abort) {
   let _headers = {};
   if (headers) {
     headers.forEach(h => {
@@ -14,14 +14,14 @@ async function fetchImage(url, callback, headers, abort) {
       controller.abort();
     });
   }
-  const f = await fetch(url, {
+  fetch(url, {
     method: "GET",
     headers: _headers,
     mode: "cors",
     signal: signal
-  });
-  const blob = await f.blob();
-  callback(blob);
+  })
+  .then(f => f.blob)
+  .then(blob => callback(blob));
 }
 
 L.TileLayer.WMSHeader = L.TileLayer.WMS.extend({
